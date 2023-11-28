@@ -9,20 +9,20 @@ import tiktoken
 import re
 
 SAMPLE_PROMPTS = {
-    "user": "/action/prompt/user.md",
-    "command": "/action/prompt/command.md",
-    "format": "/action/prompt/format.md",
-    "title": "/action/prompt/title.md",
-    "unified_change": "/action/prompt/unified_change.md",
+    "user": "/prompt/user.md",
+    "command": "/prompt/command.md",
+    "format": "/prompt/format.md",
+    "title": "/prompt/title.md",
+    "unified_change": "/prompt/unified_change.md",
 }
 
-GOOD_SAMPLE_RESPONSES = {"response": "/action/response/response.md"}
+GOOD_SAMPLE_RESPONSES = {"response": "/response/response.md"}
 
 COMPLETION_PROMPTS = {
-    "user": "/action/prompt/user.md",
-    "command": "/action/prompt/command.md",
-    "format": "/action/prompt/format.md",
-    "title": "/action/prompt/title.md",
+    "user": "/prompt/user.md",
+    "command": "/prompt/command.md",
+    "format": "/prompt/format.md",
+    "title": "/prompt/title.md",
 }
 
 
