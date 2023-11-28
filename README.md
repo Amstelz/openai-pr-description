@@ -6,7 +6,7 @@ Autofill the description of your pull requests with the power of OpenAI!
 
 ## What does it do?
 
-`chalermporn17/openai-pr-description` is forked from 
+`Amstelz/openai-pr-description` is forked from
 ```
 `platisd/openai-pr-description` which is a GitHub Action that looks at the title as well as the contents
 of your pull request and uses the [OpenAI API](https://openai.com/blog/openai-api) to automatically
@@ -45,7 +45,7 @@ on:
       - dev
       - main
       - master
-      
+
 jobs:
   openai-pr-description:
     runs-on: ubuntu-22.04
@@ -88,7 +88,7 @@ too include or exclude file type, you can edit `file_types` in action argument.
 Write a pull request description focusing on the motivation behind the change and why it improves the project.
 Go straight to the point.
 
-The title of the pull request is "Enable valgrind on CI" and the following changes took place: 
+The title of the pull request is "Enable valgrind on CI" and the following changes took place:
 
 Changes in file .github/workflows/build-ut-coverage.yml: @@ -24,6 +24,7 @@ jobs:
          run: |
@@ -112,7 +112,7 @@ Changes in file test/CommandParserTest.cpp: @@ -566,7 +566,7 @@ TEST(CommandPars
      double expectedDouble { std::numeric_limits<double>::max() };
 -    long double expectedLongDouble { std::numeric_limits<long double>::max() };
 +    long double expectedLongDouble { 123455678912349.1245678912349L };
- 
+
      auto command = UnparsedCommand::create(expectedCommand, "dummyDescription"s)
                         .withArgs<int, long, unsigned long, long long, unsigned long long, float, double, long double>();
 ```
