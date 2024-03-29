@@ -108,6 +108,24 @@ def replace_title(title_file, pull_request_title):
     return title
 
 
+def update_with_format_prompt(issues_url, authorization_header, prompt):
+    print("using format prompt to update pull request description")
+    update_pr_description_result = requests.patch(
+        issues_url,
+        headers=authorization_header,
+        json={"body": prompt},
+        timeout=30,
+    )
+    if update_pr_description_result.status_code != requests.codes.ok:
+        status = "".join(
+            ["Request to update pull request description failed: "],
+            str(update_pr_description_result.status_code),
+        )
+        print(status)
+        print("Response: " + update_pr_description_result.text)
+    return 1
+
+
 SAMPLE_PROMPT = combine_prompt(SAMPLE_PROMPTS)
 
 GOOD_SAMPLE_RESPONSE = combine_prompt(GOOD_SAMPLE_RESPONSES)
@@ -196,16 +214,26 @@ def main():
         {"role": "assistant", "content": model_sample_response},
         {"role": "user", "content": completion_prompt},
     ]
+    issues_url = "%s/repos/%s/issues/%s" % (
+        github_api_url,
+        repo,
+        pull_request_id,
+    )
+
     # calculate for model selection
     model, prompt_token = model_selection(open_ai_models, messages, max_response_tokens)
     if model == "":
         print("No model available for this prompt")
-        return 1
+        update_with_format_prompt(
+            issues_url, authorization_header, COMPLETION_PROMPTS["format"]
+        )
 
     token_left = open_ai_models[model] - prompt_token - max_response_tokens
     if token_left < 0:
         print(f"Model {model} does not have enough token to generate response")
-        return 1
+        update_with_format_prompt(
+            issues_url, authorization_header, COMPLETION_PROMPTS["format"]
+        )
 
     extend_response_token = int(max_response_tokens + token_left * 0.8)
     print(
@@ -228,7 +256,9 @@ def main():
             if "Connection aborted".lower() in str(e).lower():
                 print("Retry")
             else:
-                return 1
+                update_with_format_prompt(
+                    issues_url, authorization_header, COMPLETION_PROMPTS["format"]
+                )
 
     try:
         usage = openai_response.usage
@@ -243,11 +273,7 @@ def main():
             generated_pr_description[0].upper() + generated_pr_description[1:]
         )
     print(f"Generated pull request description: \n'{generated_pr_description}'")
-    issues_url = "%s/repos/%s/issues/%s" % (
-        github_api_url,
-        repo,
-        pull_request_id,
-    )
+
     update_pr_description_result = requests.patch(
         issues_url,
         headers=authorization_header,
