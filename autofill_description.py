@@ -253,6 +253,7 @@ def main():
                 if "Connection aborted".lower() in str(e).lower():
                     print("Retry")
                 if "You exceeded your current quota".lower() in str(e).lower():
+                    print("can't use model return defaul format")
                     using_model = False
                     break
         try:
