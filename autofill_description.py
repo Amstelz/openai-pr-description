@@ -220,20 +220,17 @@ def main():
         pull_request_id,
     )
 
+    check_model, check_token = True, True
     # calculate for model selection
     model, prompt_token = model_selection(open_ai_models, messages, max_response_tokens)
     if model == "":
+        check_model = False
         print("No model available for this prompt")
-        update_with_format_prompt(
-            issues_url, authorization_header, COMPLETION_PROMPTS["format"]
-        )
 
     token_left = open_ai_models[model] - prompt_token - max_response_tokens
     if token_left < 0:
+        check_token = False
         print(f"Model {model} does not have enough token to generate response")
-        update_with_format_prompt(
-            issues_url, authorization_header, COMPLETION_PROMPTS["format"]
-        )
 
     extend_response_token = int(max_response_tokens + token_left * 0.8)
     print(
@@ -242,53 +239,56 @@ def main():
 
     openai.api_key = openai_api_key
 
-    while True:
-        try:
-            openai_response = openai.ChatCompletion.create(
-                model=model,
-                messages=messages,
-                temperature=model_temperature,
-                max_tokens=extend_response_token,
-            )
-            break
-        except Exception as e:
-            print(f"Exception: {e}")
-            if "Connection aborted".lower() in str(e).lower():
-                print("Retry")
-            else:
-                update_with_format_prompt(
-                    issues_url, authorization_header, COMPLETION_PROMPTS["format"]
+    if check_token and check_model:
+        while True:
+            try:
+                openai_response = openai.ChatCompletion.create(
+                    model=model,
+                    messages=messages,
+                    temperature=model_temperature,
+                    max_tokens=extend_response_token,
                 )
+                break
+            except Exception as e:
+                print(f"Exception: {e}")
+                if "Connection aborted".lower() in str(e).lower():
+                    print("Retry")
 
-    try:
-        usage = openai_response.usage
-        print(f"OpenAI API usage this request: {usage}")
-    except:
-        pass
-    generated_pr_description = openai_response.choices[0].message.content
-    redundant_prefix = "This pull request "
-    if generated_pr_description.startswith(redundant_prefix):
-        generated_pr_description = generated_pr_description[len(redundant_prefix) :]
-        generated_pr_description = (
-            generated_pr_description[0].upper() + generated_pr_description[1:]
+        try:
+            usage = openai_response.usage
+            print(f"OpenAI API usage this request: {usage}")
+        except:
+            pass
+        generated_pr_description = openai_response.choices[0].message.content
+        redundant_prefix = "This pull request "
+        if generated_pr_description.startswith(redundant_prefix):
+            generated_pr_description = generated_pr_description[len(redundant_prefix) :]
+            generated_pr_description = (
+                generated_pr_description[0].upper() + generated_pr_description[1:]
+            )
+        print(f"Generated pull request description: \n'{generated_pr_description}'")
+
+        update_pr_description_result = requests.patch(
+            issues_url,
+            headers=authorization_header,
+            json={"body": generated_pr_description},
+            timeout=30,
         )
-    print(f"Generated pull request description: \n'{generated_pr_description}'")
 
-    update_pr_description_result = requests.patch(
-        issues_url,
-        headers=authorization_header,
-        json={"body": generated_pr_description},
-        timeout=30,
-    )
-
-    if update_pr_description_result.status_code != requests.codes.ok:
-        status = "".join(
-            ["Request to update pull request description failed: "],
-            str(update_pr_description_result.status_code),
+        if update_pr_description_result.status_code != requests.codes.ok:
+            status = "".join(
+                ["Request to update pull request description failed: "],
+                str(update_pr_description_result.status_code),
+            )
+            print(status)
+            print("Response: " + update_pr_description_result.text)
+            return 1
+    else:
+        update_with_format_prompt(
+            issues_url,
+            authorization_header,
+            markdown_to_string(COMPLETION_PROMPTS["format"]),
         )
-        print(status)
-        print("Response: " + update_pr_description_result.text)
-        return 1
 
 
 def get_pull_request_description(
