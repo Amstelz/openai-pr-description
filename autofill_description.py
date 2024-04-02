@@ -237,9 +237,8 @@ def main():
         f"Using model {model} with {prompt_token} prompt tokens and reserve {extend_response_token} response token"
     )
 
-    openai.api_key = openai_api_key
-
     if check_token and check_model:
+        openai.api_key = openai_api_key
         while True:
             try:
                 openai_response = openai.ChatCompletion.create(
